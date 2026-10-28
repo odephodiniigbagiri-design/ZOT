@@ -104,16 +104,3 @@ toggle.addEventListener("click", () => {
   const isOpen = navLinks.classList.toggle("is-open");
   toggle.setAttribute("aria-expanded", String(isOpen));
 });
-
-## Fix it
-
-1. Open `src/site.js` in GitHub and click **Edit**.
-2. Press `Ctrl + F` and search for three backticks: ` ``` `
-3. If you find backticks that are being used as Markdown code fences in the file, **delete those lines**. Don't remove the single backticks that are part of JavaScript template strings.
-4. Check the end of the file. It should finish like this:
-
-```javascript
-toggle.addEventListener("click", () => {
-  const isOpen = navLinks.classList.toggle("is-open");
-  toggle.setAttribute("aria-expanded", String(isOpen));
-});
