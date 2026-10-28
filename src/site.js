@@ -105,8 +105,6 @@ toggle.addEventListener("click", () => {
   toggle.setAttribute("aria-expanded", String(isOpen));
 });
 
-Those three backticks are Markdown formatting, not JavaScript. They may have been accidentally copied into your actual source file when you pasted code from ChatGPT.
-
 ## Fix it
 
 1. Open `src/site.js` in GitHub and click **Edit**.
