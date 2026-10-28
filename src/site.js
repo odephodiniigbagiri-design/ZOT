@@ -25,7 +25,7 @@ try {
 }
 
 const registerHref = savedToken
-  ? `/register.html?token=${encodeURIComponent(savedToken)}`
+  ? "/register.html?token=" + encodeURIComponent(savedToken)
   : "/register.html";
 
 const path = window.location.pathname;
