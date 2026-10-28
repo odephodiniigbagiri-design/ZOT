@@ -1,0 +1,83 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ZOT Admin Login</title>
+</head>
+<body>
+  <div id="app">
+    <main class="auth-card">
+      <span class="chip">Administration</span>
+      <h1>Welcome back</h1>
+      <p class="lede">
+        Sign in with your authorized Zenith Online Tutorials
+        administrator account.
+      </p>
+
+      <form id="loginForm">
+        <label class="field-label" for="email">Administrator email</label>
+        <input class="input" id="email" type="email" autocomplete="username"
+          placeholder="you@example.com" required />
+
+        <label class="field-label" for="password">Password</label>
+        <input class="input" id="password" type="password"
+          autocomplete="current-password" required />
+
+        <button class="btn btn--block" id="submitButton" type="submit">Sign in securely</button>
+      </form>
+
+      <p id="message" class="status" role="status" aria-live="polite"></p>
+    </main>
+  </div>
+
+  <script type="module">
+    import './src/site.js';
+    import { supabase } from './src/supabase.js';
+
+    const form = document.getElementById('loginForm');
+    const message = document.getElementById('message');
+    const button = document.getElementById('submitButton');
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      button.disabled = true;
+      message.textContent = 'Signing in…';
+
+      try {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value;
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+
+        if (error) throw error;
+
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .maybeSingle();
+
+        if (roleError) throw roleError;
+
+        if (roleData?.role !== 'main_admin') {
+          await supabase.auth.signOut();
+          throw new Error('This account is not authorized for the admin area.');
+        }
+
+        message.textContent = 'Signed in. Opening the dashboard…';
+        window.location.replace('/admin-dashboard.html');
+      } catch (error) {
+        message.textContent =
+          error.message || 'Unable to sign in. Please try again.';
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
