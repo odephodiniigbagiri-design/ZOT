@@ -29,27 +29,14 @@ const registerHref = savedToken
   : "/register.html";
 
 const path = window.location.pathname;
-
 const links = [
   { label: "Join Class", href: "/attend.html", match: "/attend.html" },
   { label: "Home", href: "/", match: "/" },
   { label: "Register", href: registerHref, match: "/register.html" },
-  {
-    label: "Student Login",
-    href: "/student-login.html",
-    match: "/student-login.html",
-  },
-  {
-    label: "My Dashboard",
-    href: "/student-dashboard.html",
-    match: "/student-dashboard.html",
-  },
+  { label: "Student Login", href: "/student-login.html", match: "/student-login.html" },
+  { label: "My Dashboard", href: "/student-dashboard.html", match: "/student-dashboard.html" },
   { label: "Admin Login", href: "/admin.html", match: "/admin.html" },
-  {
-    label: "Admin Dashboard",
-    href: "/admin-dashboard.html",
-    match: "/admin-dashboard.html",
-  },
+  { label: "Admin Dashboard", href: "/admin-dashboard.html", match: "/admin-dashboard.html" },
 ];
 
 function linkHtml(link) {
