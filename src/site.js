@@ -1,6 +1,4 @@
-```javascript
-// Shared look and navigation for every ZOT page.
-// Import this file at the top of a page's script: import "./site.js";
+
 import "./site.css";
 
 const TOKEN_KEY = "zot_invitation_token";
@@ -12,7 +10,7 @@ if (urlToken) {
   try {
     sessionStorage.setItem(TOKEN_KEY, urlToken);
   } catch {
-    // Storage may be blocked; the original URL still works.
+    // Storage may be blocked.
   }
 }
 
@@ -29,6 +27,7 @@ const registerHref = savedToken
   : "/register.html";
 
 const path = window.location.pathname;
+
 const links = [
   { label: "Join Class", href: "/attend.html", match: "/attend.html" },
   { label: "Home", href: "/", match: "/" },
@@ -59,6 +58,7 @@ function linkHtml(link) {
   );
 }
 
+// Create the site header.
 const header = document.createElement("header");
 header.className = "site-nav";
 
@@ -85,28 +85,17 @@ header.innerHTML = `
   </div>
 `;
 
-
-    <button
-      class="site-nav__toggle"
-      type="button"
-      aria-expanded="false"
-      aria-controls="siteLinks"
-    >Menu</button>
-
-    <nav id="siteLinks" class="site-nav__links" aria-label="Main">
-      ${links.map(linkHtml).join("")}
-    </nav>
-  </div>
-`;
-
+// Create the footer.
 const footer = document.createElement("footer");
 footer.className = "site-footer";
 footer.textContent =
   `© ${new Date().getFullYear()} Zenith Online Tutorials · Student Portal`;
 
+// Add the header and footer to the page.
 document.body.prepend(header);
 document.body.append(footer);
 
+// Make the mobile menu work.
 const toggle = header.querySelector(".site-nav__toggle");
 const navLinks = header.querySelector("#siteLinks");
 
