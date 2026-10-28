@@ -1,6 +1,6 @@
 ```javascript
 // Shared look and navigation for every ZOT page.
-// Import this one file at the top of a page's script: import "./site.js";
+// Import this file at the top of a page's script: import "./site.js";
 import "./site.css";
 
 const TOKEN_KEY = "zot_invitation_token";
@@ -52,11 +52,9 @@ const links = [
   },
 ];
 
-
 function linkHtml(link) {
-  const current = path === link.match
-    ? ' aria-current="page"'
-    : "";
+  const current =
+    path === link.match ? ' aria-current="page"' : "";
 
   const cls = link.label.startsWith("Admin")
     ? ' class="is-admin"'
@@ -74,32 +72,10 @@ function linkHtml(link) {
   );
 }
 
-
 const header = document.createElement("header");
 header.className = "site-nav";
 
 header.innerHTML = `
-  <div class="site-nav__inner">
-    <a class="site-brand" href="/" aria-label="Zenith Online Tutorials home">
-      <img src="/zot-logo.jpg" alt="" width="42" height="42" />
-      <span>
-        Zenith Online Tutorials
-        <small>Student Portal</small>
-      </span>
-    </a>
-
-    <button
-      class="site-nav__toggle"
-      type="button"
-      aria-expanded="false"
-      aria-controls="siteLinks"
-    >Menu</button>
-
-    <nav id="siteLinks" class="site-nav__links" aria-label="Main">
-      ${links.map(linkHtml).join("")}
-    </nav>
-  </div>
-`;
   <div class="site-nav__inner">
     <a class="site-brand" href="/" aria-label="Zenith Online Tutorials home">
       <img src="/zot-logo.jpg" alt="" width="42" height="42" />
