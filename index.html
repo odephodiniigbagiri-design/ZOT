@@ -103,6 +103,41 @@ footer{background:var(--navy2);color:#b9c6df;padding:28px 0;font-size:15px;text-
  section.s{padding:46px 0}
  .barin .btn{padding:7px 12px;font-size:14px}
 }
+/* Your existing CSS above */
+
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 6px;
+  max-width: 100%;
+}
+
+.header-actions .btn {
+  white-space: nowrap;
+}
+
+.barin {
+  height: auto;
+  min-height: 62px;
+  padding-top: 8px;
+  padding-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+@media (max-width: 760px) {
+  .barin {
+    justify-content: center;
+  }
+
+  .header-actions {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+</style>
 </style>
 </head>
 <body>
