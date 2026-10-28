@@ -52,6 +52,7 @@ const links = [
   },
 ];
 
+
 function linkHtml(link) {
   const current = path === link.match
     ? ' aria-current="page"'
@@ -61,7 +62,16 @@ function linkHtml(link) {
     ? ' class="is-admin"'
     : "";
 
-  return `<a href="${link.href}"${cls}${current}>${link.label}</a>`;
+  return (
+    '<a href="' +
+    link.href +
+    '"' +
+    cls +
+    current +
+    ">" +
+    link.label +
+    "</a>"
+  );
 }
 
 
