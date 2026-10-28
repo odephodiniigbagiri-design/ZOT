@@ -62,6 +62,29 @@ function linkHtml(link) {
 const header = document.createElement("header");
 header.className = "site-nav";
 
+header.innerHTML = `
+  <div class="site-nav__inner">
+    <a class="site-brand" href="/" aria-label="Zenith Online Tutorials home">
+      <img src="/zot-logo.jpg" alt="" width="42" height="42" />
+      <span>
+        Zenith Online Tutorials
+        <small>Student Portal</small>
+      </span>
+    </a>
+
+    <button
+      class="site-nav__toggle"
+      type="button"
+      aria-expanded="false"
+      aria-controls="siteLinks"
+    >Menu</button>
+
+    <nav id="siteLinks" class="site-nav__links" aria-label="Main">
+      ${links.map(linkHtml).join("")}
+    </nav>
+  </div>
+`;
+
 
     <button
       class="site-nav__toggle"
