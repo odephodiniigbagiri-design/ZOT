@@ -1,0 +1,327 @@
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+
+:root {
+  font-family: 'DM Sans', sans-serif;
+  color: #172238;
+  background: #f5f7fb;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  font-optical-sizing: auto;
+  font-weight: 400;
+}
+
+* { box-sizing: border-box; }
+
+body { margin: 0; min-width: 320px; min-height: 100vh; }
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(ellipse at 50% 15%, #e5edff 0, transparent 45%),
+    #f7f8fc;
+}
+
+.nav {
+  width: min(1080px, calc(100% - 48px));
+  margin: 0 auto;
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #e3e8f1;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  text-decoration: none;
+  color: #172238;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.3px;
+}
+
+.brand strong {
+  display: block;
+  margin-top: 3px;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: #75819a;
+}
+
+.brand-mark {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  color: white;
+  font-family: Manrope, sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  background: linear-gradient(145deg, #4778f5, #2452d6);
+  box-shadow: 0 6px 15px #315fd32b;
+}
+
+.secure {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.4px;
+  color: #63718b;
+}
+
+.dot {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 7px;
+  border-radius: 50%;
+  background: #28a879;
+}
+
+.hero {
+  width: min(540px, calc(100% - 36px));
+  margin: auto;
+  padding: 65px 0 58px;
+}
+
+.eyebrow {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2.6px;
+  color: #4268cf;
+}
+
+h1 {
+  margin: 18px 0 12px;
+  text-align: center;
+  font-family: Manrope, sans-serif;
+  font-size: clamp(36px, 7vw, 53px);
+  font-weight: 800;
+  letter-spacing: -2.4px;
+}
+
+h1 span { color: #3867e8; }
+
+.intro {
+  max-width: 440px;
+  margin: 0 auto 29px;
+  text-align: center;
+  line-height: 1.8;
+  color: #6b7890;
+  font-size: 14px;
+}
+
+.notice {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid #dce6ff;
+  border-radius: 13px;
+  background: #eef3ff;
+  margin-bottom: 20px;
+}
+
+.notice-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 29px;
+  height: 29px;
+  border-radius: 9px;
+  color: white;
+  background: #3867e8;
+  font-weight: 700;
+}
+
+.notice strong { font-size: 13px; }
+
+.notice p {
+  margin: 5px 0 0;
+  color: #65728a;
+  font-size: 12px;
+  line-height: 1.65;
+}
+
+.panel {
+  padding: 26px;
+  border: 1px solid #e4e9f2;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 18px 50px #24375c0b;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+h2 {
+  margin: 0 0 7px;
+  font-family: Manrope, sans-serif;
+  font-size: 19px;
+  letter-spacing: -.5px;
+}
+
+.panel-heading p {
+  margin: 0;
+  color: #7b879b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.step {
+  flex-shrink: 0;
+  padding: 7px 9px;
+  border-radius: 7px;
+  color: #4268cf;
+  background: #eff3ff;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: .5px;
+}
+
+label {
+  display: block;
+  margin-bottom: 9px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+input {
+  width: 100%;
+  height: 49px;
+  padding: 0 14px;
+  border: 1px solid #dce2ec;
+  border-radius: 10px;
+  outline: none;
+  color: #172238;
+  background: #fff;
+  font: inherit;
+  font-size: 13px;
+  transition: border-color .2s, box-shadow .2s;
+}
+
+input:focus {
+  border-color: #4778f5;
+  box-shadow: 0 0 0 3px #4778f51b;
+}
+
+button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 49px;
+  margin-top: 14px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: #315fe0;
+  color: white;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .2s, transform .2s;
+}
+
+button:hover { background: #244fc6; }
+button:active { transform: scale(.99); }
+button span { font-size: 20px; }
+
+.message {
+  margin: 10px 0 0;
+  color: #3155b0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.footnote {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  margin-top: 20px;
+  padding-top: 17px;
+  border-top: 1px solid #edf0f5;
+  color: #7b879b;
+  font-size: 10px;
+  line-height: 1.7;
+}
+
+.footnote span { color: #4268cf; }
+
+.steps {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 11px;
+  margin-top: 29px;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9aa4b6;
+}
+
+.step-item > span {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #dce2ec;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.step-item.active { color: #315fe0; }
+
+.step-item.active > span {
+  border-color: #315fe0;
+  background: #315fe0;
+  color: white;
+}
+
+.step-item strong, .step-item small { display: block; }
+.step-item strong { font-size: 10px; }
+.step-item small { margin-top: 3px; font-size: 9px; }
+.step-line { width: 20px; height: 1px; background: #dce2ec; }
+
+footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 15px;
+  width: min(1080px, calc(100% - 48px));
+  margin: 0 auto;
+  padding: 22px 0;
+  border-top: 1px solid #e3e8f1;
+  color: #8994a7;
+  font-size: 9px;
+  letter-spacing: .5px;
+}
+
+@media (max-width: 480px) {
+  .nav { width: calc(100% - 32px); min-height: 72px; }
+  .brand { font-size: 11px; }
+  .brand-mark { width: 36px; height: 36px; }
+  .secure { font-size: 8px; letter-spacing: .5px; }
+  .hero { padding: 45px 0 38px; }
+  .panel { padding: 20px 17px; }
+  .panel-heading { flex-direction: column; }
+  .steps { gap: 6px; }
+  .step-line { width: 9px; }
+  .step-item { gap: 5px; }
+  .step-item small { font-size: 8px; }
+  footer { width: calc(100% - 32px); flex-direction: column; text-align: center; }
+}
