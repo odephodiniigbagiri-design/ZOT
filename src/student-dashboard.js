@@ -1,36 +1,9 @@
-
 import { supabase } from "./supabase.js";
 import "./site.js";
 
 const app = document.getElementById("app");
 
-app.innerHTML = `
-  <main class="auth-card auth-card--wide">
-    <span class="chip">Student dashboard</span>
-
-    <section id="dashboardMessage" class="status">
-      Loading your dashboard...
-    </section>
-
-    <section id="studentDetails" class="stack" hidden>
-      <h1>Welcome, <span id="studentName"></span>!</h1>
-      <p class="lede">Email: <span id="studentEmail">—</span></p>
-
-      <div class="zot-id-card">
-        <p>Permanent ZOT ID</p>
-        <h2 id="studentZotId">—</h2>
-      </div>
-
-      <h3 class="section-title">Your Tutorial Enrollments</h3>
-      <div id="enrollmentList" class="card-grid"></div>
-
-      <h3 class="section-title">Your Referral Codes</h3>
-      <div id="referralList" class="card-grid"></div>
-
-      <button class="btn btn--alt" id="logoutButton" type="button">Sign Out</button>
-    </section>
-  </main>
-`;
+app.innerHTML = ` <main class="auth-card auth-card--wide"> <span class="chip">Student dashboard</span> <section id="dashboardMessage" class="status"> Loading your dashboard... </section> <section id="studentDetails" class="stack" hidden> <h1>Welcome, <span id="studentName"></span>!</h1> <p class="lede">Email: <span id="studentEmail">—</span></p> <div class="zot-id-card"> <p>Permanent ZOT ID</p> <h2 id="studentZotId">—</h2> </div> <h3 class="section-title">Your Tutorial Enrollments</h3> <div id="enrollmentList" class="card-grid"></div> <h3 class="section-title">Your Class Attendance</h3> <div id="attendanceList" class="card-grid"></div> <h3 class="section-title">Your Referral Codes</h3> <div id="referralList" class="card-grid"></div> <button class="btn btn--alt" id="logoutButton" type="button">Sign Out</button> </section> </main> `;
 
 const message = document.getElementById("dashboardMessage");
 const details = document.getElementById("studentDetails");
@@ -76,23 +49,20 @@ async function loadDashboard() {
       return;
     }
 
-    document.getElementById("studentName").textContent =
-      profile.full_name;
+    document.getElementById("studentName").textContent = profile.full_name;
     document.getElementById("studentEmail").textContent =
       user.email || "Not available";
 
-    document.getElementById("studentZotId").textContent =
-      formatZotId(profile.zot_id);
+    document.getElementById("studentZotId").textContent = formatZotId(
+      profile.zot_id
+    );
 
-    const { data: enrollments, error: enrollmentError } =
-      await supabase
-        .from("tutorial_enrollments")
-        .select(`
-          status,
-          tutorials ( name ),
-          tutorial_packages ( name )
-        `)
-        .eq("student_id", user.id);
+    const { data: enrollments, error: enrollmentError } = await supabase
+      .from("tutorial_enrollments")
+      .select(
+        ` status, tutorials ( name ), tutorial_packages ( name ) `
+      )
+      .eq("student_id", user.id);
 
     if (enrollmentError) throw enrollmentError;
 
@@ -107,42 +77,71 @@ async function loadDashboard() {
         card.className = "item-card";
 
         const title = document.createElement("h4");
-        title.textContent =
-          enrollment.tutorials?.name || "Tutorial";
+        title.textContent = enrollment.tutorials?.name || "Tutorial";
 
         const packageName = document.createElement("p");
-        packageName.textContent =
-          `Package: ${enrollment.tutorial_packages?.name || "Not specified"}`;
+        packageName.textContent = `Package: ${ enrollment.tutorial_packages?.name || "Not specified" }`;
 
         const status = document.createElement("p");
         const statusLabels = {
-            approved: "Enrollment confirmed",
-            awaiting_payment: "Awaiting payment",
-            payment_pending_review: "Payment under review",
-            rejected: "Enrollment not approved",
-            cancelled: "Enrollment cancelled",
+          approved: "Enrollment confirmed",
+          awaiting_payment: "Awaiting payment",
+          payment_pending_review: "Payment under review",
+          rejected: "Enrollment not approved",
+          cancelled: "Enrollment cancelled",
         };
 
         status.className = "badge";
         status.dataset.status = enrollment.status;
         status.textContent =
-            statusLabels[enrollment.status] || "Status unavailable";
+          statusLabels[enrollment.status] || "Status unavailable";
 
         card.append(title, packageName, status);
         enrollmentList.appendChild(card);
       }
     }
 
-    const { data: referralCodes, error: referralError } =
-        await supabase
-            .from("referral_codes")
-            .select(`
-                id,
-                code,
-                tutorial_id,
-                referrals ( id )
-            `)
-            .eq("owner_id", user.id);
+    const attendanceList = document.getElementById("attendanceList");
+    const { data: attendanceRecords, error: attendanceError } = await supabase
+      .from("attendance")
+      .select(
+        ` marked_at, tutorial_sessions ( title, session_date, tutorials ( name ) ) `
+      )
+      .eq("student_id", user.id)
+      .order("marked_at", { ascending: false });
+
+    attendanceList.replaceChildren();
+    if (attendanceError) {
+      console.error("Student attendance history error:", attendanceError);
+      attendanceList.textContent = `Attendance history could not be loaded: ${attendanceError.message}`;
+    } else if (!attendanceRecords || attendanceRecords.length === 0) {
+      attendanceList.textContent =
+        "You have not marked attendance for any class yet.";
+    } else {
+      for (const record of attendanceRecords) {
+        const session = record.tutorial_sessions || {};
+        const card = document.createElement("article");
+        card.className = "item-card";
+        const tutorial = document.createElement("h4");
+        tutorial.textContent = session.tutorials?.name || "Tutorial";
+        const title = document.createElement("p");
+        title.textContent = session.title || "Class session";
+        const classDate = document.createElement("p");
+        classDate.textContent = `Class date: ${ session.session_date ? new Date(session.session_date).toLocaleString() : "Not available" }`;
+        const marked = document.createElement("p");
+        marked.className = "badge";
+        marked.textContent = `Present · ${ record.marked_at ? new Date(record.marked_at).toLocaleString() : "time unavailable" }`;
+        card.append(tutorial, title, classDate, marked);
+        attendanceList.appendChild(card);
+      }
+    }
+
+    const { data: referralCodes, error: referralError } = await supabase
+      .from("referral_codes")
+      .select(
+        ` id, code, tutorial_id, referrals ( id ) `
+      )
+      .eq("owner_id", user.id);
     if (referralError) throw referralError;
 
     const referralList = document.getElementById("referralList");
@@ -159,8 +158,7 @@ async function loadDashboard() {
         code.className = "item-code";
         code.textContent = `Referral code: ${referral.code}`;
         const count = document.createElement("p");
-        count.textContent =
-            `People referred: ${referral.referrals?.length ?? 0}`;
+        count.textContent = `People referred: ${ referral.referrals?.length ?? 0 }`;
 
         const copyButton = document.createElement("button");
         copyButton.type = "button";
