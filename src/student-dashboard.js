@@ -50,6 +50,10 @@ app.innerHTML = `
       <h3 class="section-title">Your Tutorial Enrollments</h3>
       <div id="enrollmentList" class="card-grid"></div>
 
+      <h3 class="section-title">Your Attendance</h3>
+      <p id="attendanceSummary" class="lede"></p>
+      <div id="attendanceList" class="card-grid"></div>
+
       <h3 class="section-title">Your Referral Codes</h3>
       <div id="referralList" class="card-grid"></div>
 
@@ -67,6 +71,85 @@ function formatZotId(id) {
 
 function showMessage(text) {
   message.textContent = text;
+}
+
+function formatClassDate(value) {
+  return value ? new Date(value).toLocaleString() : "Date not set";
+}
+
+async function loadAttendance() {
+  const list = document.getElementById("attendanceList");
+  const summary = document.getElementById("attendanceSummary");
+  list.replaceChildren();
+
+  try {
+    const { data, error } = await supabase.rpc("zot_student_attendance");
+    if (error) throw error;
+
+    const records = Array.isArray(data) ? data : [];
+
+    if (records.length === 0) {
+      summary.textContent = "";
+      list.textContent = "No classes have been recorded yet.";
+      return;
+    }
+
+    const held = records.filter(
+      (r) => r.status === "present" || r.status === "absent"
+    );
+    const presentCount = records.filter((r) => r.status === "present").length;
+    summary.textContent = held.length
+      ? `Present for ${presentCount} of ${held.length} classes.`
+      : "";
+
+    // Reuses existing badge colours: approved = green, rejected = red,
+    // awaiting_payment = amber.
+    const labels = {
+      present: ["approved", "Present"],
+      absent: ["rejected", "Absent"],
+      open: ["awaiting_payment", "Link open: use the link from your tutor"],
+      upcoming: ["awaiting_payment", "Upcoming"],
+    };
+
+    for (const record of records) {
+      const card = document.createElement("article");
+      card.className = "item-card";
+
+      const title = document.createElement("h4");
+      title.textContent = record.title || "Class";
+
+      const course = document.createElement("p");
+      course.textContent = record.tutorial_name || "Tutorial";
+
+      const when = document.createElement("p");
+      when.textContent = `Class: ${formatClassDate(record.session_date)}`;
+
+      const badge = document.createElement("p");
+      const [badgeStatus, badgeText] = labels[record.status] || [
+        "",
+        "Status unavailable",
+      ];
+      badge.className = "badge";
+      badge.dataset.status = badgeStatus;
+      badge.textContent = badgeText;
+
+      card.append(title, course, when, badge);
+
+      if (record.status === "present" && record.marked_at) {
+        const marked = document.createElement("p");
+        marked.textContent = `Marked at ${new Date(
+          record.marked_at
+        ).toLocaleString()}`;
+        card.append(marked);
+      }
+
+      list.appendChild(card);
+    }
+  } catch (error) {
+    console.error("ZOT attendance error:", error);
+    summary.textContent = "";
+    list.textContent = "We couldn't load your attendance right now.";
+  }
 }
 
 async function loadDashboard() {
@@ -206,6 +289,8 @@ async function loadDashboard() {
         referralList.appendChild(item);
       }
     }
+
+    await loadAttendance();
 
     message.hidden = true;
     details.hidden = false;
