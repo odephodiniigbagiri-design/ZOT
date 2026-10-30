@@ -1,4 +1,3 @@
-
 import { supabase } from "./supabase.js";
 import "./site.js";
 
@@ -43,20 +42,6 @@ const message = document.getElementById("loginMessage");
 const button = document.getElementById("loginButton");
 const params = new URLSearchParams(window.location.search);
 
-// Where to go after sign-in: the page that sent the student here (for example an
-// attendance link). Only paths on this same site are accepted.
-function nextPage() {
-  const raw = params.get("next");
-  if (!raw) return null;
-  try {
-    const url = new URL(raw, window.location.origin);
-    if (url.origin !== window.location.origin) return null;
-    return url.pathname + url.search + url.hash;
-  } catch {
-    return null;
-  }
-}
-
 if (params.get("registered") === "true") {
   message.textContent =
     "Registration successful! Please sign in with your email and password.";
@@ -96,7 +81,16 @@ form.addEventListener("submit", async (event) => {
       );
     }
 
-    window.location.href = nextPage() || "/student-dashboard.html";
+    // Honour only same-site relative destinations (attendance links use this).
+    const requestedNext = params.get("next");
+    const safeNext =
+      requestedNext &&
+      requestedNext.startsWith("/") &&
+      !requestedNext.startsWith("//") &&
+      !requestedNext.includes("\\")
+        ? requestedNext
+        : "/student-dashboard.html";
+    window.location.replace(safeNext);
   } catch (error) {
     console.error("ZOT student login error:", error);
     message.textContent =
