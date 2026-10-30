@@ -13,264 +13,187 @@ app.innerHTML = `
   <main class="auth-card" data-stage="verify">
     <span class="chip">Student registration</span>
     <h1>Welcome to ZOT</h1>
-    <p class="lede">
-      Verify your email first, then complete your registration to access
-      your tutorial dashboard.
-    </p>
-
+    <p class="lede">Your payment has been reviewed by the ZOT administrator. Verify your registration and create your password to activate your student account.</p>
     <ol class="steps" aria-label="Registration steps">
-      <li>Verify email</li>
-      <li>Your details</li>
-      <li>Dashboard</li>
+      <li>Payment verified</li><li>Create password</li><li>Dashboard</li>
     </ol>
-
-    <div id="registrationMessage" class="status" role="status" aria-live="polite">
-      Checking your invitation link...
-    </div>
-
-    <!-- STAGE 1: email verification only -->
-    <form id="verifyForm" hidden>
-      <label class="field-label" for="verifyEmail">Email address</label>
-      <input class="input" id="verifyEmail" name="verifyEmail" type="email"
-        autocomplete="email" required readonly />
-
-      <button class="btn btn--block" type="submit" id="verifyButton">
-        Verify my email
-      </button>
-    </form>
-
-    <!-- STAGE 2: details, shown only after the email is verified -->
+    <div id="registrationMessage" class="status" role="status" aria-live="polite">Checking your invitation link...</div>
+    <section id="studentDetails" hidden>
+      <h2>Your submitted details</h2>
+      <p class="student-sub">These details were retrieved from the payment receipt you submitted. Contact the administrator if anything is incorrect.</p>
+      <div id="detailsSummary" class="registration-details"></div>
+      <button class="btn btn--block" type="button" id="confirmVerifiedButton">Verify my registration</button>
+    </section>
     <form id="registrationForm" hidden>
-      <label class="field-label" for="fullName">Full name</label>
-      <input class="input" id="fullName" name="fullName" type="text"
-        autocomplete="name" required maxlength="120" />
-
-      <label class="field-label" for="email">Email address</label>
-      <input class="input" id="email" name="email" type="email"
-        autocomplete="email" required readonly />
-
-      <label class="field-label" for="phone">Phone number</label>
-      <input class="input" id="phone" name="phone" type="tel"
-        autocomplete="tel" required maxlength="30" />
-
-      <label class="field-label" for="referralCode">Referral code (optional)</label>
-      <input class="input input--upper" id="referralCode" name="referralCode"
-        type="text" autocomplete="off" maxlength="32"
-        placeholder="Enter a friend's ZOT referral code" />
-
       <label class="field-label" for="password">Create a password</label>
-      <input class="input" id="password" name="password" type="password"
-        autocomplete="new-password" minlength="8" required />
-
-      <button class="btn btn--block" type="submit">Create Account</button>
+      <input class="input" id="password" name="password" type="password" autocomplete="new-password" minlength="8" required />
+      <label class="field-label" for="confirmPassword">Confirm password</label>
+      <input class="input" id="confirmPassword" name="confirmPassword" type="password" autocomplete="new-password" minlength="8" required />
+      <label class="field-label" for="referralCode">Referral code (optional)</label> <input class="input input--upper" id="referralCode" name="referralCode" type="text" autocomplete="off" maxlength="32" placeholder="Enter a friend's ZOT referral code" />
+      <button class="btn btn--block" type="submit">Verify & create my account</button>
     </form>
   </main>
 `;
 
 const card = document.querySelector(".auth-card");
 const message = document.getElementById("registrationMessage");
-const verifyForm = document.getElementById("verifyForm");
-const verifyButton = document.getElementById("verifyButton");
 const form = document.getElementById("registrationForm");
+const detailsPanel = document.getElementById("studentDetails");
+const detailsSummary = document.getElementById("detailsSummary");
+const confirmVerifiedButton = document.getElementById("confirmVerifiedButton");
+let invitation = null;
 
-let invitedEmail = "";
+function showDetails(data) {
+  const rows = [
+    ["Full name", data.full_name],
+    ["Email", data.email],
+    ["WhatsApp number", data.whatsapp_number],
+    ["Data bundle number", data.data_bundle_number],
+    ["Telegram number", data.telegram_number],
+    ["Tutorial", data.tutorial_name],
+    ["Package", data.package_name],
+  ].filter(([, value]) => value);
+  detailsSummary.replaceChildren(
+    ...rows.map(([label, value]) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "registration-detail-row";
+      const strong = document.createElement("strong");
+      strong.textContent = label;
+      const span = document.createElement("span");
+      span.textContent = String(value);
+      wrapper.append(strong, span);
+      return wrapper;
+    })
+  );
+}
 
 if (!token) {
   message.textContent =
-    "No invitation token was found. Please open the registration link sent to you by the ZOT administrator.";
+    "No invitation token was found. Please open the registration link sent by the ZOT administrator.";
 } else {
-  message.textContent = "Verifying your invitation securely...";
-
   try {
     const { data, error } = await supabase.functions.invoke(
       "verify-registration-invitation",
-      {
-        body: { token },
-      }
+      { body: { token } }
     );
-
-    if (error || !data?.valid) {
+    if (error || !data?.valid)
       throw new Error(
         data?.error || error?.message || "Invitation verification failed."
       );
-    }
+    invitation = data;
 
-    invitedEmail = String(data.email).trim().toLowerCase();
-
-    const invitationSummary =
-      `Tutorial: ${data.tutorial_name || "ZOT tutorial"}. ` +
-      `Package: ${data.package_name || "Selected package"}. ` +
-      `Invitation expires: ${new Date(data.expires_at).toLocaleString()}.`;
-
-    // Is the student already signed in with the invited, confirmed email?
-    // (This is the case after they click the link in the Supabase email.)
+    // A previous successful registration should not be repeated in this browser.
     const { data: sessionData } = await supabase.auth.getSession();
-    const sessionUser = sessionData?.session?.user;
-
-    const emailIsVerified =
-      sessionUser &&
-      Boolean(sessionUser.email_confirmed_at) &&
-      sessionUser.email?.toLowerCase() === invitedEmail;
-
-    if (emailIsVerified) {
-      // STAGE 2: show the details form.
-      message.textContent =
-        `Email verified! Please complete your details below. ${invitationSummary}`;
-      document.getElementById("email").value = invitedEmail;
-      card.dataset.stage = "details";
-      form.hidden = false;
-    } else {
-      // STAGE 1: ask only for email verification.
-      let signedOutOtherAccount = false;
-
-      if (sessionUser) {
-        // A different account is signed in on this browser. Sign it out
-        // on this device so it cannot interfere with registration.
-        await supabase.auth.signOut({ scope: "local" });
-        signedOutOtherAccount = true;
-      }
-
-      const hashParams = new URLSearchParams(
-        window.location.hash.replace(/^#/, "")
-      );
-      const linkError = hashParams.get("error_description");
-
-      document.getElementById("verifyEmail").value = invitedEmail;
-
-      if (linkError) {
-        message.textContent =
-          "That verification link is invalid or has expired. " +
-          "Click the button below to receive a new one. " +
-          invitationSummary;
-      } else {
-        message.textContent =
-          `Invitation verified! ${invitationSummary} ` +
-          "Click the button below and we will email you a verification link." +
-          (signedOutOtherAccount
-            ? " (Another account was signed in on this browser, so it was signed out.)"
-            : "");
-      }
-
-      verifyForm.hidden = false;
-    }
-  } catch (error) {
-    message.textContent =
-      error.message ||
-      "We couldn't verify your invitation. Please contact the ZOT administrator.";
-  }
-}
-
-// STAGE 1 submit: send the verification email (no password needed yet).
-verifyForm.addEventListener("submit", async (event) => {
-  event.preventDefault();
-
-  verifyButton.disabled = true;
-  verifyButton.textContent = "Sending...";
-
-  try {
-    const { error } = await supabase.auth.signInWithOtp({
-      email: invitedEmail,
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo:
-          `${window.location.origin}/register.html?token=${encodeURIComponent(token)}`,
-      },
-    });
-
-    if (error) {
-      throw error;
+    const currentUser = sessionData?.session?.user;
+    if (
+      currentUser &&
+      currentUser.email?.toLowerCase() !== String(data.email).toLowerCase()
+    ) {
+      await supabase.auth.signOut({ scope: "local" });
     }
 
-    message.textContent =
-      `We sent a verification link to ${invitedEmail}. ` +
-      "Open that email and click the link to continue your registration. " +
-      "If you don't see it, check your spam folder.";
-
-    verifyButton.textContent = "Resend verification email";
+    showDetails(data);
+    detailsPanel.hidden = false;
+    form.hidden = true;
+    card.dataset.stage = "verify";
+    message.textContent = `We found your administrator-approved payment for ${
+      data.tutorial_name || "your tutorial"
+    } · ${data.package_name || "your package"}. Confirm below to continue.`;
   } catch (error) {
     message.textContent =
       error instanceof Error
         ? error.message
-        : "We couldn't send the verification email. Please try again.";
-
-    verifyButton.textContent = "Verify my email";
-  } finally {
-    verifyButton.disabled = false;
+        : "We couldn't verify your invitation. Please contact the ZOT administrator.";
   }
+}
+
+confirmVerifiedButton.addEventListener("click", () => {
+  if (!invitation) return;
+  detailsPanel.hidden = true;
+  form.hidden = false;
+  card.dataset.stage = "password";
+  message.textContent =
+    "Your payment is verified. Create a password to activate your ZOT student account.";
+  document.getElementById("password").focus();
 });
 
-// STAGE 2 submit: set the password, then finish registration on the server.
 form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  if (!invitation || !token) return;
 
-  const fullName = document.getElementById("fullName").value.trim();
-  const email = document.getElementById("email").value.trim().toLowerCase();
-  const phone = document.getElementById("phone").value.trim();
   const password = document.getElementById("password").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
   const submitButton = form.querySelector('button[type="submit"]');
+  if (password.length < 8)
+    return (message.textContent =
+      "Your password must contain at least 8 characters.");
+  if (password !== confirmPassword)
+    return (message.textContent = "Your passwords do not match.");
 
   submitButton.disabled = true;
-  submitButton.textContent = "Processing...";
+  submitButton.textContent = "Creating account…";
+  message.textContent = "Creating your secure ZOT student account…";
 
   try {
-    if (!token) {
-      throw new Error("Your invitation token is missing.");
+    const email = String(invitation.email).trim().toLowerCase();
+    // Email confirmation is disabled in Supabase Auth. signUp creates the user
+    // and returns a session; no OTP or confirmation email is requested here.
+    const { data: existingSession } = await supabase.auth.getSession();
+    let activeUser = existingSession?.session?.user || null;
+
+    if (activeUser?.email?.toLowerCase() === email) {
+      // Allows a student to safely retry finalization if account creation
+      // succeeded but a later network request failed.
+      const { error: updateError } = await supabase.auth.updateUser({
+        password,
+      });
+      if (updateError) throw updateError;
+    } else {
+      if (activeUser) {
+        await supabase.auth.signOut({ scope: "local" });
+        activeUser = null;
+      }
+      const { data: signUpData, error: signUpError } =
+        await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: invitation.full_name || "" } },
+        });
+      if (signUpError) {
+        if (
+          /already registered|already been registered|user already registered/i.test(
+            signUpError.message || ""
+          )
+        ) {
+          throw new Error(
+            "An account already exists for this email. Please contact the ZOT administrator so the existing account can be linked safely."
+          );
+        }
+        throw signUpError;
+      }
+      activeUser = signUpData?.user || null;
+      if (!signUpData?.session || !activeUser) {
+        throw new Error(
+          "Your account was created, but Supabase did not return a login session. Please contact the ZOT administrator; do not submit another payment."
+        );
+      }
     }
 
-    // Confirm the signed-in user owns the invited email.
-    const { data: userData, error: userError } =
-      await supabase.auth.getUser();
-
-    if (userError || !userData.user) {
-      throw new Error(
-        "Your email session has expired. Please reload this page and verify your email again."
-      );
-    }
-
-    if (
-      !userData.user.email_confirmed_at ||
-      userData.user.email?.toLowerCase() !== email
-    ) {
-      throw new Error(
-        "Please verify the invited email address before continuing."
-      );
-    }
-
-    // Save the password chosen by the student. If this step is retried with
-    // the same password, Supabase reports "same password"; that is fine.
-    const { error: passwordError } = await supabase.auth.updateUser({
-      password,
-    });
-
-    if (
-      passwordError &&
-      passwordError.code !== "same_password" &&
-      !/different from the old password/i.test(passwordError.message || "")
-    ) {
-      throw passwordError;
-    }
-
-    // Finalize profile, ZOT ID, enrollment, referral and referral code.
-    const referralCode =
-      document.getElementById("referralCode").value.trim().toUpperCase();
-
+    const referralCode = document
+      .getElementById("referralCode")
+      .value.trim()
+      .toUpperCase();
     const { data: result, error: registrationError } =
       await supabase.functions.invoke("complete-student-registration", {
-        body: {
-          token,
-          full_name: fullName,
-          phone,
-          referral_code: referralCode || null,
-        },
+        body: { token, referral_code: referralCode || null },
       });
 
     if (registrationError) {
       let serverMessage = "";
       try {
-        const errorBody = await registrationError.context?.json();
-        serverMessage = errorBody?.error || errorBody?.message || "";
+        serverMessage = (await registrationError.context?.json())?.error || "";
       } catch {
-        // The response had no readable JSON body; fall back below.
+        /* no JSON response */
       }
       throw new Error(
         serverMessage ||
@@ -278,35 +201,22 @@ form.addEventListener("submit", async (event) => {
           "Registration could not be completed."
       );
     }
+    if (!result?.success)
+      throw new Error(result?.error || "Registration could not be completed.");
 
-    if (!result?.success) {
-      throw new Error(
-        result?.error || "Registration could not be completed."
-      );
-    }
-
-    message.textContent =
-      `Registration successful! Your permanent ZOT ID is ${formatZotId(result.zot_id)}. ` +
-      `Tutorial: ${result.tutorial_name}. ` +
-      `Package: ${result.package_name}. ` +
-      `Referral code: ${result.referral_code}.`;
-
+    message.textContent = `Registration successful! Your permanent ZOT ID is ${formatZotId(
+      result.zot_id
+    )}. You are being redirected to your dashboard.`;
     form.hidden = true;
-    window.location.href = "/student-login.html?registered=true";
+    detailsPanel.hidden = true;
+    window.location.href = "/student-dashboard.html?registered=true";
   } catch (error) {
     console.error("ZOT registration error:", error);
-
     message.textContent =
       error instanceof Error
         ? error.message
-        : JSON.stringify(error);
-
-    submitButton.textContent = "Try Again";
-  } finally {
+        : "Registration failed. Please try again or contact the administrator.";
     submitButton.disabled = false;
-
-    if (!form.hidden && submitButton.textContent === "Processing...") {
-      submitButton.textContent = "Create Account";
-    }
+    submitButton.textContent = "Try Again";
   }
 });
