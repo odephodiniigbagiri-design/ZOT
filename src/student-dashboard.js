@@ -1,6 +1,9 @@
 
 import { supabase } from "./supabase.js";
 import "./site.js";
+import {
+  ROUND_COUNT, scheduledStart, fmtDate, fmtCountdown, clockOffset,
+} from "./mock-common.js";
 
 const app = document.getElementById("app");
 
@@ -20,6 +23,9 @@ app.innerHTML = `
         <p>Permanent ZOT ID</p>
         <h2 id="studentZotId">—</h2>
       </div>
+
+      <h3 class="section-title">Mock Challenge</h3>
+      <div id="mockCard" class="card-grid"></div>
 
       <h3 class="section-title">Join Your Class Groups</h3>
       <div class="card-grid">
@@ -75,6 +81,94 @@ function showMessage(text) {
 
 function formatClassDate(value) {
   return value ? new Date(value).toLocaleString() : "Date not set";
+}
+
+async function loadMockCard() {
+  const box = document.getElementById("mockCard");
+  let rows = [];
+  let offset = 0;
+  try {
+    const { data, error } = await supabase.rpc("zot_mock_list");
+    if (error) throw error;
+    rows = Array.isArray(data) ? data : [];
+    if (rows.length) offset = clockOffset(rows[0].server_now);
+  } catch (error) {
+    // Mock tables not set up yet: fall back to the fixed Sunday schedule.
+    console.error("ZOT mock error:", error);
+  }
+  const now = () => Date.now() + offset;
+
+  let title = "Mock Challenge";
+  let line = "A new mock every Sunday.";
+  let target = null;
+  let action = null;
+
+  for (let n = 1; n <= ROUND_COUNT; n++) {
+    const ch = rows.find((r) => r.round_no === n);
+    if (ch?.attempt_id && !ch.submitted_at && now() < Date.parse(ch.attempt_ends_at)) {
+      title = `Round ${n} in progress`;
+      line = "Your timer is running. Continue your mock.";
+      action = [`/mock-exam.html?attempt=${ch.attempt_id}`, "Continue"];
+      break;
+    }
+    if (ch && !ch.attempt_id && now() >= Date.parse(ch.starts_at) && now() <= Date.parse(ch.closes_at)) {
+      title = `Round ${n} is open now`;
+      line = `${ch.duration_minutes} minutes. Start when you are ready.`;
+      action = ["/mocks.html", "Start Mock"];
+      break;
+    }
+    const start = ch ? Date.parse(ch.starts_at) : scheduledStart(n);
+    if (now() < start) {
+      title = `Round ${n}`;
+      if (ch) {
+        line = "Starts in ";
+        target = start;
+      } else {
+        line = `${fmtDate(start)} · Pending`;
+      }
+      break;
+    }
+  }
+
+  const card = document.createElement("article");
+  card.className = "item-card";
+  const h = document.createElement("h4");
+  h.textContent = title;
+  const p = document.createElement("p");
+  p.textContent = line;
+  card.append(h, p);
+
+  if (target) {
+    const cd = document.createElement("strong");
+    const tick = () => {
+      const left = target - now();
+      cd.textContent = fmtCountdown(left);
+      if (left <= 0) {
+        clearInterval(timer);
+        loadMockCard();
+      }
+    };
+    const timer = setInterval(tick, 1000);
+    tick();
+    p.append(cd);
+  }
+
+  const link = document.createElement("a");
+  link.className = "btn";
+  link.style.cssText = "display:inline-block;text-decoration:none;text-align:center";
+  link.href = action ? action[0] : "/mocks.html";
+  link.textContent = action ? action[1] : "Open Mock Challenge";
+  card.append(link);
+
+  if (action) {
+    const all = document.createElement("a");
+    all.className = "btn btn--alt";
+    all.style.cssText = "display:inline-block;text-decoration:none;text-align:center;margin-left:.5rem";
+    all.href = "/mocks.html";
+    all.textContent = "History";
+    card.append(all);
+  }
+  box.replaceChildren(card);
 }
 
 async function loadAttendance() {
@@ -291,6 +385,7 @@ async function loadDashboard() {
     }
 
     await loadAttendance();
+    await loadMockCard();
 
     message.hidden = true;
     details.hidden = false;
