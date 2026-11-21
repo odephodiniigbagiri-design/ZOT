@@ -52,6 +52,64 @@ const detailsSummary = document.getElementById("detailsSummary");
 const confirmVerifiedButton = document.getElementById("confirmVerifiedButton");
 let invitation = null;
 
+async function readFunctionError(error, data) {
+  if (data?.error) return { text: String(data.error), status: null };
+  const status = error?.context?.status || null;
+  let text = "";
+  try {
+    const body = await error.context.clone().json();
+    text = body?.error || body?.message || "";
+  } catch {
+    try {
+      text = await error.context.text();
+    } catch {
+      /* no body */
+    }
+  }
+  return { text: text || error?.message || "", status };
+}
+
+function friendlyInvitationError({ text, status }) {
+  if (/invalid, expired, revoked, or already used/i.test(text))
+    return "This registration link can no longer be used. It may already have been used to register, been replaced by a newer link, or expired. If you already registered, go to Student Login and sign in with your email and password. Otherwise, ask the administrator for a new link.";
+  if (/link is invalid/i.test(text))
+    return "This registration link looks incomplete or damaged. Please open the full link the administrator sent you, or ask for a new one.";
+  if (/payment has not completed|verification/i.test(text) || status === 403)
+    return "Your payment has not been fully verified yet. Please contact the administrator.";
+  if (/expired/i.test(text))
+    return "This registration link has expired. Please contact the ZOT administrator for a new link.";
+  return `We couldn't verify your registration link right now${status ? ` (error ${status})` : ""}. Please try again in a moment. If it keeps happening, contact the administrator.`;
+}
+
+function showLinkProblem(text, detail) {
+  message.textContent = text;
+  const actions = document.createElement("div");
+  actions.className = "reg-actions";
+  const retry = document.createElement("button");
+  retry.type = "button";
+  retry.className = "reg-act";
+  retry.textContent = "Try again";
+  retry.addEventListener("click", () => window.location.reload());
+  const login = document.createElement("a");
+  login.className = "reg-act alt";
+  login.href = "/student-login.html";
+  login.textContent = "Student login";
+  const wa = document.createElement("a");
+  wa.className = "reg-act alt";
+  wa.href = "https://wa.me/2349128462600";
+  wa.target = "_blank";
+  wa.rel = "noopener noreferrer";
+  wa.textContent = "WhatsApp the administrator";
+  actions.append(retry, login, wa);
+  message.append(actions);
+  if (detail) {
+    const small = document.createElement("p");
+    small.className = "reg-detail";
+    small.textContent = `Details for the administrator: ${detail}`;
+    message.append(small);
+  }
+}
+
 const pw = document.getElementById("password");
 const pw2 = document.getElementById("confirmPassword");
 const refInput = document.getElementById("referralCode");
@@ -150,10 +208,12 @@ if (!token) {
       "verify-registration-invitation",
       { body: { token } }
     );
-    if (error || !data?.valid)
-      throw new Error(
-        data?.error || error?.message || "Invitation verification failed."
-      );
+    if (error || !data?.valid) {
+      const info = await readFunctionError(error, data);
+      const err = new Error(info.text || "Invitation verification failed.");
+      err.info = info;
+      throw err;
+    }
     invitation = data;
 
     // A previous successful registration should not be repeated in this browser.
@@ -174,10 +234,10 @@ if (!token) {
       data.tutorial_name || "your tutorial"
     } · ${data.package_name || "your package"}. Confirm below to continue.`;
   } catch (error) {
-    message.textContent =
-      error instanceof Error
-        ? error.message
-        : "We couldn't verify your invitation. Please contact the ZOT administrator.";
+    console.error("ZOT invitation error:", error);
+    const info = error?.info || { text: error instanceof Error ? error.message : "", status: null };
+    const detail = [info.status, info.text].filter(Boolean).join(": ");
+    showLinkProblem(friendlyInvitationError(info), detail);
   }
 }
 
