@@ -1,0 +1,24 @@
+/* Create-password step */
+.pw-intro{margin:0 0 .4rem;padding:.9rem 1rem;border-radius:14px;background:var(--brand-soft);font-size:.95rem;line-height:1.55}
+.pw-intro strong{overflow-wrap:anywhere}
+.pw-wrap{position:relative}
+.pw-wrap .input{padding-right:3.2rem}
+.pw-eye{position:absolute;right:.35rem;top:50%;transform:translateY(-50%);width:2.6rem;height:2.6rem;display:grid;place-items:center;border:0;border-radius:10px;background:transparent;color:var(--muted,#5b6080);cursor:pointer}
+.pw-eye:hover{background:var(--brand-soft)}
+.pw-eye svg{width:1.35rem;height:1.35rem;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.pw-eye .off{display:none}
+.pw-eye[aria-pressed="true"] .on{display:none}.pw-eye[aria-pressed="true"] .off{display:block}
+.pw-rules{list-style:none;margin:.7rem 0 0;padding:0;display:grid;gap:.3rem;font-size:.92rem}
+.pw-rules li{display:flex;align-items:center;gap:.55rem;color:var(--muted,#5b6080)}
+.pw-rules li:before{content:"";flex:none;width:1.1rem;height:1.1rem;border-radius:50%;border:2px solid #c3c8e6;background:#fff center/70% no-repeat}
+.pw-rules li[data-ok="true"]{color:#157f3b;font-weight:600}
+.pw-rules li[data-ok="true"]:before{border-color:#157f3b;background-color:#157f3b;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23fff' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E")}
+.pw-rules li[data-ok="false"]{color:#b3261e;font-weight:600}
+.pw-rules li[data-ok="false"]:before{border-color:#b3261e}
+.field-hint{margin:.4rem 0 0;font-size:.88rem;color:var(--muted,#5b6080)}
+.input[aria-invalid="true"]{border-color:#b3261e;box-shadow:0 0 0 3px #fde2e0}
+.form-error{display:flex;gap:.7rem;align-items:flex-start;margin:1.1rem 0 0;padding:.9rem 1rem;border-radius:14px;background:#fde2e0;border:1.5px solid #f3b3ae;color:#8f1d16;font-weight:600;line-height:1.5}
+.form-error[hidden]{display:none}
+.form-error svg{flex:none;width:1.4rem;height:1.4rem;margin-top:.05rem;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.form-error span{min-width:0;overflow-wrap:anywhere}
+#registrationForm .btn--block{margin-top:1.1rem}
