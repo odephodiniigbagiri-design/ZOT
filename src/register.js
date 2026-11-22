@@ -162,6 +162,8 @@ function friendlyError(raw) {
     return { text: "That password is too easy to guess. Try a longer one that mixes letters and numbers.", field: pw };
   if (/at least \d+ char|too short/i.test(m))
     return { text: "Your password must contain at least 8 characters.", field: pw };
+  if (/password you typed does not match/i.test(m))
+    return { text: m, field: pw };
   if (/referral/i.test(m))
     return { text: m, field: refInput };
   if (/rate limit|too many/i.test(m))
@@ -309,20 +311,31 @@ form.addEventListener("submit", async (event) => {
           password,
           options: { data: { full_name: invitation.full_name || "" } },
         });
+      let signedIn = null;
       if (signUpError) {
         if (
           /already registered|already been registered|user already registered/i.test(
             signUpError.message || ""
           )
         ) {
-          throw new Error(
-            "An account already exists for this email. Please contact the ZOT administrator so the existing account can be linked safely."
-          );
+          // An account for this email already exists but is not linked to this
+          // invitation yet (for example an earlier attempt stopped half-way).
+          // Signing in with the password typed here proves it is their account.
+          const { data: signInData, error: signInError } =
+            await supabase.auth.signInWithPassword({ email, password });
+          if (signInError || !signInData?.session) {
+            throw new Error(
+              "An account with this email already exists, and the password you typed does not match it. If you created this account earlier, type the password you used then. If you can't remember it, contact the ZOT administrator to reset it."
+            );
+          }
+          signedIn = signInData;
+        } else {
+          throw signUpError;
         }
-        throw signUpError;
       }
-      activeUser = signUpData?.user || null;
-      if (!signUpData?.session || !activeUser) {
+      const sessionData = signedIn || signUpData;
+      activeUser = sessionData?.user || null;
+      if (!sessionData?.session || !activeUser) {
         throw new Error(
           "Your account was created, but Supabase did not return a login session. Please contact the ZOT administrator; do not submit another payment."
         );
