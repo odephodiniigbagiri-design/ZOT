@@ -41,8 +41,14 @@ const sent = document.getElementById("sent");
 const resendBtn = document.getElementById("resendBtn");
 let cooldown = null;
 
-function showError(text) {
+function showError(text, detail) {
   formErrorText.textContent = text;
+  if (detail) {
+    const small = document.createElement("small");
+    small.style.cssText = "display:block;margin-top:.5rem;font-weight:500;opacity:.85";
+    small.textContent = `Details for the administrator: ${detail}`;
+    formErrorText.append(small);
+  }
   formError.hidden = false;
   emailInput.setAttribute("aria-invalid", "true");
   formError.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -116,7 +122,8 @@ form.addEventListener("submit", async (event) => {
     };
   } catch (error) {
     console.error("ZOT forgot-password error:", error);
-    showError(friendly(error));
+    const detail = [error?.status, error?.code, error?.message].filter(Boolean).join(", ");
+    showError(friendly(error), detail);
   } finally {
     sendBtn.disabled = false;
     sendBtn.textContent = "Send reset link";
